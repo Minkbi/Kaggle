@@ -5,9 +5,12 @@ Created on Fri Feb  3 15:21:11 2017
 @author: Marc
 """
 #import
+
 # pandas
 import pandas as pd
 from pandas import Series,DataFrame
+#copy
+import copy
 #display
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,17 +20,44 @@ sns.set_style('whitegrid')
 
 trainData = pd.read_csv("train.csv")
 testData  = pd.read_csv("test.csv")
-
+trainFeature = copy.copy(trainData)
 trainData.head()
+trainFeature.head()
 
 #trainData = trainData + trainData[]
 
-test = trainData["Name"].str.split(',')
-test_split = test
+#==============================================================================
+# Title
+#==============================================================================
 
-for i in range(len(test)) :
-    test_split[i] = test[i][1].split(' ')[1][:-1]
+title = trainData["Name"].str.split(',')
+rareTitle = ['Dona', 'Lady', 'the Countess','Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer']
+for i in range(len(title)) :
+    title[i] = title[i][1].split(' ')[1][:-1]
+    if title[i] == 'Mlle' or title[i] == 'Ms' :
+        title[i] = 'Miss'
+    elif title[i] == 'Mme' :
+        title[i] = 'Mrs'
+    elif title[i] in rareTitle:
+        title[i] = 'Rare'
+trainFeature['Title'] = title
+#==============================================================================
+# Name
+#==============================================================================
+         
+name =  trainData["Name"].str.split(',')
+for i in range(len(name)) :
+    name[i] = name[i][0]
+trainFeature['SurName'] = name 
+    
+            
 
+#==============================================================================
+# Family
+#==============================================================================
+testFamily = trainFeature.groupby(['SurName'],as_index=False).count()
+trainFeature['Fcount'] = testFamily['PassengerId']
+trainFeature['Fcount' == 1]
 
 
 
