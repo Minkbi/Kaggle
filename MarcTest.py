@@ -183,3 +183,13 @@ trainFeature['Child']=child
 #==============================================================================
 # plot Age
 #==============================================================================
+
+#==============================================================================
+# Completion des ages avec la moyenne des categories
+#==============================================================================
+
+meanTitle = trainFeature.groupby(["Title"],as_index=True).mean()
+
+for i in range (len(trainFeature)) :
+    if np.isnan(trainFeature['Age'][i]) :
+        trainFeature.loc[i,'Age'] = meanTitle['Age'][trainFeature['Title'][i]]
