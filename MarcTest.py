@@ -185,7 +185,7 @@ trainFeature['Child']=child
 #==============================================================================
 
 #==============================================================================
-# Completion des ages avec la moyenne des categories
+# Complete les ages avec la moyenne des categories
 #==============================================================================
 
 meanTitle = trainFeature.groupby(["Title"],as_index=True).mean()
@@ -193,3 +193,13 @@ meanTitle = trainFeature.groupby(["Title"],as_index=True).mean()
 for i in range (len(trainFeature)) :
     if np.isnan(trainFeature['Age'][i]) :
         trainFeature.loc[i,'Age'] = meanTitle['Age'][trainFeature['Title'][i]]
+        
+        
+#==============================================================================
+# Complete le lieu d'embarquement
+#==============================================================================
+
+#countEmbarked = trainFeature.groupby(["Embarked"],as_index=False).count()
+for i in range (len(trainFeature)) :
+        if (trainFeature['Embarked'][i]) not in ['C','Q','S'] :
+            trainFeature.loc[i,'Embarked'] = 'S'
