@@ -185,7 +185,7 @@ trainFeature['Child']=child
 #==============================================================================
 
 #==============================================================================
-# Complete les ages avec la moyenne des categories
+# Complete les ages avec la moyenne des categories (on peut aussi tester avec la médiane)
 #==============================================================================
 
 meanTitle = trainFeature.groupby(["Title"],as_index=True).mean()
@@ -199,7 +199,41 @@ for i in range (len(trainFeature)) :
 # Complete le lieu d'embarquement
 #==============================================================================
 
-#countEmbarked = trainFeature.groupby(["Embarked"],as_index=False).count()
+#countEmbarked = trainFeature.groupby(["Embarked","Pclass"],as_index=False).count()
 for i in range (len(trainFeature)) :
         if (trainFeature['Embarked'][i]) not in ['C','Q','S'] :
             trainFeature.loc[i,'Embarked'] = 'S'
+            
+                            
+#==============================================================================
+# Complete le pont
+#==============================================================================
+
+#fareCat = []
+
+#for i in range (len(trainFeature)) :
+#    if trainFeature["Fare"][i] < 10 :
+#        fareCat.append("Cat1")
+#    elif trainFeature["Fare"][i] < 20 :
+#        fareCat.append("Cat2")
+#    elif trainFeature["Fare"][i] < 30 :
+#        fareCat.append("Cat3")
+#    elif trainFeature["Fare"][i] < 60 :
+#        fareCat.append("Cat4")
+#    else :
+#        fareCat.append("Cat5")
+        
+#trainFeature["FareCat"] = fareCat
+
+deck = trainFeature["Cabin"].str.split(' ')
+
+for i in range (len(deck)) :
+    if (str(deck[i]) != 'nan') :
+        deck[i] = str(deck[i])[2]
+        
+trainFeature["Deck"] = deck
+            
+#deckExploration = trainFeature.groupby(["Deck","Embarked","Pclass"],as_index=False).count()
+#trainData["Fare"].plot(kind='hist', figsize=(15,3),bins=100, xlim=(0,100))
+
+        
