@@ -47,7 +47,11 @@ Z = dataTest.ix[:, 0:]
 predForest=forest.predict(Z)
 
 submission = pd.DataFrame({
+<<<<<<< HEAD
         "PassengerId": test_df["PassengerId"],
+=======
+        "PassengerId": test["PassengerId"],
+>>>>>>> da21083e96a4ac5bad2ee2db63096bdee03bf0c9
         "Survived": predForest
     })
 submission.to_csv('titanicForest.csv', index=False)
@@ -60,7 +64,11 @@ print("Logistic regression score :", logreg.score(X, y))
 
 
 submission = pd.DataFrame({
+<<<<<<< HEAD
         "PassengerId": test_df["PassengerId"],
+=======
+        "PassengerId": test["PassengerId"],
+>>>>>>> da21083e96a4ac5bad2ee2db63096bdee03bf0c9
         "Survived": predLog
     })
 submission.to_csv('titanicLog.csv', index=False)

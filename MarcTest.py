@@ -101,10 +101,10 @@ trainFeature['Child']=child
 #==============================================================================
 # Deck        
 #==============================================================================
-#Deck = []
-#for i in range(tabLen):
-#    if trainFeature['Cabin'][i].isna():
-#        Deck += [trainFeature['Cabin'][i]]
+Deck = []
+for i in range(tabLen):
+    if not(np.isnan(trainFeature['Cabin'][i])):
+        Deck += [trainFeature['Cabin'][i]]
 
 
 test2 = trainData.groupby(["Name"],as_index=False).min()
