@@ -60,7 +60,8 @@ submission = pd.DataFrame({
         "Survived": predForest
     })
 submission.to_csv('titanicForest.csv', index=False)
-#
+
+
 #
 #logreg = LogisticRegression()
 #logreg.fit(X, y)
