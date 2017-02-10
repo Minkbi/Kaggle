@@ -22,7 +22,7 @@ def dataAcq():
     trainData = pd.read_csv("train.csv")
     testData  = pd.read_csv("test.csv")
     trainFeature = copy.copy(trainData)
-    trainData.head()
+    testData.head()
     trainFeature.head()
 
 #trainData = trainData + trainData[]
@@ -30,21 +30,35 @@ def dataAcq():
 #==============================================================================
 # Title
 #==============================================================================
-def nameAdd(trainFeature):
-    title = trainFeature["Name"].str.split(',')
+def titleAdd(trainFeature):
+    titleId = trainFeature["Name"].str.split(',')
+    title = []
     rareTitle = ['Dona', 'Lady', 'th','Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer']
-    for i in range(len(title)) :
-        title[i] = title[i][1].split(' ')[1][:-1]
-        if title[i] == 'Mlle' or title[i] == 'Ms' :
-            title[i] = 4.0
-        elif title[i] == 'Mme' :
-            title[i] = 3.0
-        elif title[i] in rareTitle:
-            title[i] = 2.0
-        elif title[i] == 'Mr':
-            title[i] = 1.0
+#    print("**********************")
+#    print(title)
+        
+    for i in range(1,len(titleId)+1) :
+#        print("**********************")
+#        print(i)
+#        print("**********************")
+#        print(title[i][1])
+#        print("**********************")
+#        print( title[i][1].split(' ')[1][:-1])
+        titleId[i] = titleId[i][1].split(' ')[1][:-1]
+#        print("**********************")
+#        print(title[i])
+        title += [titleId[i]]
+        if titleId[i] == 'Mlle' or titleId[i] == 'Ms' :
+            titleId[i] = 4.0
+        elif titleId[i] == 'Mme' :
+            titleId[i] = 3.0
+        elif titleId[i] in rareTitle:
+            titleId[i] = 2.0
+        elif titleId[i] == 'Mr':
+            titleId[i] = 1.0
         else :
-            title[i] = 0.0
+            titleId[i] = 0.0
+    trainFeature['TitleId'] = titleId
     trainFeature['Title'] = title
 #==============================================================================
 # Name
@@ -68,20 +82,20 @@ def surnameAdd(trainFeature):
 def famillyAdd(trainFeature):
     tabLen = len(trainFeature)
     familly = []
-    for i in range(tabLen):
+    for i in range(1,tabLen+1):
         familly += [trainFeature['SibSp'][i]+trainFeature['Parch'][i] +1]
     trainFeature['Fsize'] = familly
 
     fDim=[]            
     for i in range(tabLen):
         if  familly[i]<=1:
-            fDim += ['single']
+            fDim += [0] #single
         elif familly[i]<=4:
-            fDim += ['small']
+            fDim += [1]# small
         else :
-            fDim += ['big']
+            fDim += [2]# big
         
-        trainFeature['FDim'] = fDim
+    trainFeature['FDim'] = fDim
             
 #==============================================================================
 # mother and children
@@ -89,7 +103,7 @@ def famillyAdd(trainFeature):
 def motherAdd(trainFeature):
     mother = []
     tabLen = len(trainFeature)
-    for i in range(tabLen):
+    for i in range(1,tabLen+1):
         if trainFeature['Parch'][i]>=1 and trainFeature['Age'][i]>18 and trainFeature['Title'][i]!='Miss' and trainFeature['Sex'][i]=='female':
             mother += [1]
         else:
@@ -97,7 +111,7 @@ def motherAdd(trainFeature):
     trainFeature['Mother']=mother
 
     child = []
-    for i in range(tabLen):
+    for i in range(1,tabLen+1):
         if trainFeature['Parch'][i]>=1 and trainFeature['Age'][i]<18 :
             child += [1]
         else:
@@ -211,18 +225,21 @@ def deckAdd(trainFeature):
 #==============================================================================
 def naAge(trainFeature):
     meanTitle = trainFeature.groupby(["Title"],as_index=True).mean()
+    age =[]
 
-    for i in range (len(trainFeature)) :
-        if pd.isnull(trainFeature['Age'][i]) :
-            trainFeature.loc[i,'Age'] = meanTitle['Age'][trainFeature['Title'][i]]
+    for i in range (1,len(trainFeature)+1) :
+        if np.isnan(trainFeature['Age'][i]) :
+            age += [meanTitle['Age'][trainFeature['Title'][i]]]
+        else :
+            age += [trainFeature['Age'][i]]
 
-        
+    trainFeature['Age'] = age
 #==============================================================================
 # Complete le lieu d'embarquement
 #==============================================================================
 def naEmbarked(trainFeature):
 #countEmbarked = trainFeature.groupby(["Embarked","Pclass"],as_index=False).count()
-    for i in range (len(trainFeature)) :
+    for i in range (1,len(trainFeature)+1) :
             if (trainFeature['Embarked'][i]) not in ['C','Q','S'] :
                 trainFeature.loc[i,'Embarked'] = 'S'
             
