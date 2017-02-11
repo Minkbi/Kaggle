@@ -32,6 +32,11 @@ def dataAcq():
 #==============================================================================
 def titleAdd(trainFeature):
     titleId = trainFeature["Name"].str.split(',')
+    titleMlle = trainFeature["Name"].str.split(',')
+    titleMme = trainFeature["Name"].str.split(',')
+    titleMr = trainFeature["Name"].str.split(',')
+    titleRare = trainFeature["Name"].str.split(',')
+    titleElse = trainFeature["Name"].str.split(',')
     title = []
     rareTitle = ['Dona', 'Lady', 'th','Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer']
 #    print("**********************")
@@ -49,16 +54,40 @@ def titleAdd(trainFeature):
 #        print(title[i])
         title += [titleId[i]]
         if titleId[i] == 'Mlle' or titleId[i] == 'Ms' :
-            titleId[i] = 4.0
+            titleMlle[i] = 1
+            titleMme[i] = 0
+            titleMr[i] = 0
+            titleRare[i] = 0
+            titleElse[i] = 0
         elif titleId[i] == 'Mme' :
-            titleId[i] = 3.0
+            titleMlle[i] = 0
+            titleMme[i] = 1
+            titleMr[i] = 0
+            titleRare[i] = 0
+            titleElse[i] = 0
         elif titleId[i] in rareTitle:
-            titleId[i] = 2.0
+            titleMlle[i] = 0
+            titleMme[i] = 0
+            titleMr[i] = 0
+            titleRare[i] = 1
+            titleElse[i] = 0
         elif titleId[i] == 'Mr':
-            titleId[i] = 1.0
+            titleMlle[i] = 0
+            titleMme[i] = 0
+            titleMr[i] = 1
+            titleRare[i] = 0
+            titleElse[i] = 0
         else :
-            titleId[i] = 0.0
-    trainFeature['TitleId'] = titleId
+            titleMlle[i] = 0
+            titleMme[i] = 0
+            titleMr[i] = 0
+            titleRare[i] = 0
+            titleElse[i] = 1
+    trainFeature['TitleMlle'] = titleMlle
+    trainFeature['TitleMme'] = titleMme
+    trainFeature['TitleMr'] = titleMr
+    trainFeature['TitleRare'] = titleRare
+    trainFeature['TitleElse'] = titleElse
     trainFeature['Title'] = title
 #==============================================================================
 # Name
@@ -86,16 +115,26 @@ def famillyAdd(trainFeature):
         familly += [trainFeature['SibSp'][i]+trainFeature['Parch'][i] +1]
     trainFeature['Fsize'] = familly
 
-    fDim=[]            
+    fSmall=[]
+    fSingle=[]
+    fBig=[]            
     for i in range(tabLen):
         if  familly[i]<=1:
-            fDim += [0] #single
+            fSingle += [1] #single
+            fSmall += [0]
+            fBig += [0]
         elif familly[i]<=4:
-            fDim += [1]# small
+            fSingle += [0]
+            fSmall += [1]# small
+            fBig += [0]
         else :
-            fDim += [2]# big
+            fSingle += [0]
+            fSmall += [0]
+            fBig += [1]# big
         
-    trainFeature['FDim'] = fDim
+    trainFeature['FSingle'] = fSingle
+    trainFeature['FSmall'] = fSmall
+    trainFeature['FBig'] = fBig
             
 #==============================================================================
 # mother and children
@@ -129,6 +168,7 @@ def deckAdd(trainFeature):
     for i in range(tabLen):
         if not(np.isnan(trainFeature['Cabin'][i])):
             Deck += [trainFeature['Cabin'][i]]
+    
 
 
 #    test2 = trainFeature.groupby(["Name"],as_index=False).min()

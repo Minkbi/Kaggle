@@ -17,6 +17,7 @@ testConst = test
 training = training.set_index('PassengerId')
 test = test.set_index('PassengerId')
 
+
 # the following will print out the first 5 observations
 
 def decoupageAlea9_10(train):
@@ -36,11 +37,11 @@ def validation(predict,truth):
         if predict[i]==truth[i]:
             sommeT += 1
     return sommeT/lenpredict
+    
 
+#,BTitle,BFam,BMot,BChi
 
-
-
-def clean_titanic(titanic, train):
+def clean_titanic(titanic):
     # fill in missing age and fare values with their medians
     titleAdd(titanic)
     naAge(titanic)
@@ -52,12 +53,18 @@ def clean_titanic(titanic, train):
     # turn embarked into numerical classes
     naEmbarked(titanic)
     titanic["Fare"] = titanic["Fare"].fillna(titanic["Fare"].median())
-    titanic.loc[titanic["Embarked"] == 'S', "Embarked"] = 0
-    titanic.loc[titanic["Embarked"] == "C", "Embarked"] = 1
-    titanic.loc[titanic["Embarked"] == "Q", "Embarked"] = 2
-
-    clean_data = ['Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare', 'Embarked','TitleId','FDim','Mother','Child']
-    
+    titanic.loc[titanic["Embarked"] == 'S', "EmbarkedS"] = 1
+    titanic.loc[titanic["Embarked"] != 'S', "EmbarkedS"] = 0
+    titanic.loc[titanic["Embarked"] == "C", "EmbarkedC"] = 1
+    titanic.loc[titanic["Embarked"] != "C", "EmbarkedC"] = 0
+    titanic.loc[titanic["Embarked"] == "Q", "EmbarkedQ"] = 1
+    titanic.loc[titanic["Embarked"] != "Q", "EmbarkedQ"] = 0
+    clean_data = ['TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse','FSingle','FSmall','FBig']
+#    ['Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare',
+# 'EmbarkedS', 'EmbarkedC', 'EmbarkedQ',
+#'TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse',
+#'FSingle','FSmall','FBig'
+#,'Mother','Child']
     return titanic[clean_data]
 
 
@@ -70,8 +77,31 @@ testLen = len(test)
 alldata = [training ,test]
 alldata = pd.concat(alldata)
 
+#alldata['Cabin'].fillna(0, inplace=True)
+#cabin =[]
+#for i in range(1,len(alldata)+1):
+#    if alldata["Cabin"][i] == 0:
+#        cabin += [0]
+#    elif alldata["Cabin"][i][0] == 'A' :
+#        cabin += [1]
+#    elif alldata["Cabin"][i][0] == 'B' :
+#        cabin += [2]
+#    elif alldata["Cabin"][i][0] == 'C' :
+#        cabin += [3]
+#    elif alldata["Cabin"][i][0] == 'D' :
+#        cabin += [4]
+#    elif alldata["Cabin"][i][0] == 'E' :
+#        cabin += [5]
+#    elif alldata["Cabin"][i][0] == 'F' :
+#        cabin += [6]
+#    elif alldata["Cabin"][i][0] == 'G' :
+#        cabin += [7]
+#
+#absX = alldata['Pclass'][:-1]
+#absY = cabin
+#plt.plot(absX,absY )
 
-dataTot= clean_titanic(alldata,True)
+dataTot= clean_titanic(alldata)
 data = dataTot[:trainLen]
 dataTest= dataTot[trainLen:]
 
@@ -81,47 +111,58 @@ partTest = []
 
 data = [data, trainConst.set_index('PassengerId')['Survived']]
 data = pd.concat(data,axis=1)
-data,partTest = decoupageAlea9_10(data)
-partTest['Ligne'] = list(range(0,len(partTest)))
-partTest = partTest.set_index('Ligne')
-X = data.ix[:,:-1]
-y = data.ix[:, -1]
 
-def predict(data,nest):
+
+def predictTest(data,nest):
+    partTest = []
+    data,partTest = decoupageAlea9_10(data)
+    partTest['Ligne'] = list(range(0,len(partTest)))
+    partTest = partTest.set_index('Ligne')
+    X = data.ix[:,:-1]
+    y = data.ix[:, -1]
     forest = RandomForestClassifier(n_estimators=nest,oob_score=True)
     forest = forest.fit(X, y)
-    #print("Random Forest score :",forest.score(X, y))
-    #
-    
-    #
-    #dataTest=clean_titanic(test,False)
+#    print("Random Forest score :",forest.score(X, y))
+#    print(partTest)
     Z = partTest.ix[:,:-1]
     Zy = partTest.ix[:,-1]
     predForest=forest.predict(Z)
     stat = validation(predForest,Zy)
+#    stat = 0
     return stat,nest
 
-tabStat = []
+def predictFinal(data,test):
+    X = data.ix[:,:-1]
+    y = data.ix[:, -1]
+    forest = RandomForestClassifier(n_estimators=300,oob_score=True)
+    forest = forest.fit(X, y)
+#    print("Random Forest score :",forest.score(X, y))
+
+    predForest=forest.predict(test)
+    return predForest
+
+
 tabStatX =[]
 tabStatY =[]
 max = 0
-for i in range(1,1000):
-    a, b = predict(data,10+i)
-    if max < a:
-        max = a
-    tabStatX += [a] 
-    tabStatY += [b]
+#for i in range(1,10):
+a, b = predictTest(data,100)
+predForest = predictFinal(data,dataTest)
+#    if max < a:
+#        max = a
+#    tabStatX += [a] 
+#    tabStatY += [b]
+
+print(a)
+#print(max(tabStatX))
+#plt.plot(tabStatY,tabStatX)
 
     
-
-plt.plot(tabStatY,tabStatX)
-
-    
-#submission = pd.DataFrame({
-#        "PassengerId": testConst["PassengerId"],
-#        "Survived": predForest
-#    })
-#submission.to_csv('titanicForest.csv', index=False)
+submission = pd.DataFrame({
+        "PassengerId": testConst["PassengerId"],
+        "Survived": predForest
+    })
+submission.to_csv('titanicForest.csv', index=False)
 #
 #
 ##
