@@ -163,13 +163,10 @@ def motherAdd(trainFeature):
 # Deck        
 #==============================================================================
 def deckAdd(trainFeature):
-    tabLen = len(trainFeature)
-    Deck = []
-    for i in range(tabLen):
-        if not(np.isnan(trainFeature['Cabin'][i])):
-            Deck += [trainFeature['Cabin'][i]]
-    
-
+    trainFeature['Cabin']=trainFeature['Cabin'].fillna('0')
+    trainFeature['Cabin']=trainFeature['Cabin'].apply(lambda x: x[0])
+    trainFeature = pd.concat([trainFeature, pd.get_dummies(trainFeature['Cabin'],prefix='Cabin')], axis=1)
+    return trainFeature
 
 #    test2 = trainFeature.groupby(["Name"],as_index=False).min()
 #On enlève les colonnes inutiles \\todo voir quoi faire de ticket et name
@@ -302,15 +299,15 @@ def naEmbarked(trainFeature):
 #    else :
 #        fareCat.append("Cat5")
         
-#trainFeature["FareCat"] = fareCat
-def deckAdd(trainFeature):
-    deck = trainFeature["Cabin"].str.split(' ')
-    
-    for i in range (len(deck)) :
-        if (str(deck[i]) != 'nan') :
-            deck[i] = str(deck[i])[2]
-        
-        trainFeature["Deck"] = deck
+##trainFeature["FareCat"] = fareCat
+#def deckAdd(trainFeature):
+#    deck = trainFeature["Cabin"].str.split(' ')
+#    
+#    for i in range (len(deck)) :
+#        if (str(deck[i]) != 'nan') :
+#            deck[i] = str(deck[i])[2]
+#        
+#        trainFeature["Deck"] = deck
             
 #deckExploration = trainFeature.groupby(["Deck","Embarked","Pclass"],as_index=False).count()
 #trainData["Fare"].plot(kind='hist', figsize=(15,3),bins=100, xlim=(0,100))
