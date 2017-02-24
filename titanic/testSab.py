@@ -35,6 +35,7 @@ dftest.insert(0,'Survived',np.nan,True)
 dfcombi=pd.concat([dftrain,dftest]) 
 
 
+
 #Manipulate data into format useful to classifier
     #Get rid of unuseable variables
 dfcombi=dfcombi.drop(['Ticket'],axis=1)
@@ -117,9 +118,8 @@ random.seed(400)
 from sklearn import svm
 print ('')
 print ('Training SVM...')
-svmmodel=svm.SVC(degree=3, gamma='auto', kernel='rbf')
+svmmodel=svm.SVC(degree=3, gamma='auto', kernel='linear')
 svmmodel.fit(trainnorm[:,2:],trainnorm[:,0].astype(int))
-
         #predict on normalized test data
 print ('')
 print ('Predicting using svm...')
@@ -130,9 +130,11 @@ svmoutput_train=svmmodel.predict(trainnorm[:,2:]) #for accuracy score
 from sklearn import metrics
 print ('')
 svm_pscore= metrics.accuracy_score(trainnorm[:,0].astype(int), svmoutput_train)
+
+#svm_pscore=svmmodel.score(trainnorm[:,2:],trainnorm[:,0].astype(int))
 print ('Accuracy score: ', svm_pscore) 
 
          #Write results to csv
 svmresult = np.c_[testnorm[:,0].astype(int), svmoutput.astype(int)]
 dfsvmresult = pd.DataFrame(svmresult[:,0:2], columns=['PassengerId', 'Survived'])
-#dfsvmresult.to_csv('../output/svm1.csv', index=False) #Change pathname
+dfsvmresult.to_csv('svm.csv', index=False) #Change pathname
