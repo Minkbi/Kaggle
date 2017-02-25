@@ -59,12 +59,11 @@ def clean_titanic(titanic):
     titanic.loc[titanic["Embarked"] != "C", "EmbarkedC"] = 0
     titanic.loc[titanic["Embarked"] == "Q", "EmbarkedQ"] = 1
     titanic.loc[titanic["Embarked"] != "Q", "EmbarkedQ"] = 0
-    clean_data = ['TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse','FSingle','FSmall','FBig']
-#    ['Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare',
-# 'EmbarkedS', 'EmbarkedC', 'EmbarkedQ',
-#'TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse',
-#'FSingle','FSmall','FBig'
-#,'Mother','Child']
+    clean_data = ['TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse','FSingle','FSmall','FBig','Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare',
+ 'EmbarkedS', 'EmbarkedC', 'EmbarkedQ',
+'TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse',
+'FSingle','FSmall','FBig'
+,'Mother','Child']
     return titanic[clean_data]
 
 
@@ -102,6 +101,7 @@ alldata = pd.concat(alldata)
 #plt.plot(absX,absY )
 
 dataTot= clean_titanic(alldata)
+n_features=dim(dataTot)
 data = dataTot[:trainLen]
 dataTest= dataTot[trainLen:]
 
@@ -120,8 +120,22 @@ def predictTest(data,nest):
     partTest = partTest.set_index('Ligne')
     X = data.ix[:,:-1]
     y = data.ix[:, -1]
-    forest = RandomForestClassifier(n_estimators=nest,oob_score=True)
+    forest = RandomForestClassifier(n_estimators=100,oob_score=True, n_jobs = 2, max_depth=20, max_features=n_features)
     forest = forest.fit(X, y)
+    
+    
+    
+#    importance = forest.feature_importances_
+#    importance = pd.DataFrame(importance, index=X.columns, columns=["Importance"])
+#    importance["Std"] = np.std([tree.feature_importances_
+#                            for tree in forest.estimators_], axis=0)   
+#    x = range(importance.shape[0])
+#    y = importance.ix[:, 0]
+#    yerr = importance.ix[:, 1]
+#    plt.bar(x, y, yerr=yerr, align="center")
+#    #plt.show()
+
+
 #    print("Random Forest score :",forest.score(X, y))
 #    print(partTest)
     Z = partTest.ix[:,:-1]
@@ -134,7 +148,7 @@ def predictTest(data,nest):
 def predictFinal(data,test):
     X = data.ix[:,:-1]
     y = data.ix[:, -1]
-    forest = RandomForestClassifier(n_estimators=300,oob_score=True)
+    forest = RandomForestClassifier(n_estimators=300,oob_score=True,n_jobs= -1)
     forest = forest.fit(X, y)
 #    print("Random Forest score :",forest.score(X, y))
 
@@ -145,15 +159,17 @@ def predictFinal(data,test):
 tabStatX =[]
 tabStatY =[]
 max = 0
-#for i in range(1,10):
-a, b = predictTest(data,100)
+#for i in range(1,20):
+a, b = predictTest(data,i)
+print("On obtiens avec ", i, a)
+
 predForest = predictFinal(data,dataTest)
 #    if max < a:
 #        max = a
 #    tabStatX += [a] 
 #    tabStatY += [b]
 
-print(a)
+
 #print(max(tabStatX))
 #plt.plot(tabStatY,tabStatX)
 
