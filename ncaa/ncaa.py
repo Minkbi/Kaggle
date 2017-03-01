@@ -14,10 +14,11 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import GridSearchCV
 
 results = pd.read_csv("RegularSeasonCompactResults.csv")
-#results = pd.read_csv("TourneyCompactResults.csv")
+resultsTourney = pd.read_csv("TourneyCompactResults.csv")
 
 
 results.drop(labels=['Daynum','Wloc','Lscore','Wscore','Numot'], inplace=True, axis=1)
+resultsTourney.drop(labels=['Daynum','Wloc','Lscore','Wscore','Numot'], inplace=True, axis=1)
 
 #==============================================================================
 # Traitement du poucentage de victoires cette saison sur le nombre de match joués
@@ -43,8 +44,8 @@ def victories_this_season(year):
     
 victories = victories_this_season(1985)
 victories['Season']=1985
-trainFeature = copy.copy(results)
-#trainFeature = trainFeature[trainFeature.Season != 1985]
+#trainFeature = copy.copy(results)
+trainFeature = copy.copy(resultsTourney)
 for i in range(1985,2017):
     tmp = victories_this_season(i)
     tmp['Season']=i
@@ -92,6 +93,7 @@ trainFeature = trainFeature.drop('SeedT1',axis=1)
 #==============================================================================
 
 x_train = pd.DataFrame()
+
 x_train['VictoriesTY_diff'] = trainFeature['VictoriesTY_diff']
 x_train['Seed_diff'] = trainFeature['Seed_diff']
 y_train = trainFeature['T1Victory']
@@ -122,7 +124,11 @@ x_test = np.zeros(shape=(len(df_sample_sub), 2))
 for ii, row in df_sample_sub.iterrows():
     year, t1, t2 = get_year_t1_t2(row.id)
     VictoriesTY_t1 = victories[(victories.Lteam == t1) & (victories.Season == year)].PVictory.values[0]
+    if np.isnan(VictoriesTY_t1):
+        VictoriesTY_t1 = victories[(victories.Lteam == t1) & (victories.Season == year-1)].PVictory.values[0]
     VictoriesTY_t2 = victories[(victories.Lteam == t2) & (victories.Season == year)].PVictory.values[0]
+    if np.isnan(VictoriesTY_t2):
+        VictoriesTY_t2 = victories[(victories.Lteam == t2) & (victories.Season == year-1)].PVictory.values[0]
     victories_diff = VictoriesTY_t2 - VictoriesTY_t1
     x_test[ii, 0] = victories_diff
     Seed_t2 = df_seeds[(df_seeds.Season == year) & (df_seeds.Team2 == t2)].SeedT2.values[0]
@@ -134,10 +140,6 @@ for ii, row in df_sample_sub.iterrows():
 
 # A CHANGER ABSOLUMENT !!!
 x_train = x_train.fillna(0.5)
-#y_train = y_train.fillna(0)
-for i in range(len(x_test)):
-    if np.isnan(x_test[i][0]):
-        x_test[i][0] = 0.5
         
 model = LogisticRegression()
 model = model.fit(x_train,y_train)
