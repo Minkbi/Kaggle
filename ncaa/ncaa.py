@@ -89,6 +89,25 @@ trainFeature['Seed_diff'] = trainFeature['SeedT2'] - trainFeature['SeedT1']
 trainFeature = trainFeature.drop('SeedT2',axis=1)
 trainFeature = trainFeature.drop('SeedT1',axis=1)
 
+
+#==============================================================================
+# Traitement de la moyenne de différence de points marqué entre les 2 équipes
+#============================================================================== 
+
+def get_mean_score(i):
+    
+    res = pd.read_csv("RegularSeasonCompactResults.csv")
+    df_Win = res[(res.Wteam == 1412)]  
+    diffWin=df_Win.Wscore-df_Win.Lscore
+    
+    df_Lose = res[(res.Lteam == 1412)]
+    diffLose=df_Lose.Lscore-df_Lose.Wscore
+    
+    diff=pd.concat([diffWin,diffLose])
+    return diff.mean()
+
+
+
 #==============================================================================
 # Mise en forme des données d'entrainement
 #==============================================================================
@@ -119,7 +138,7 @@ def get_year_t1_t2(id):
 #Testest = victory_last_season(2016)['PVictory'][1103]
 
 #A DECOMMENTER
-x_test = np.zeros(shape=(len(df_sample_sub), 2))
+x_test = np.zeros(shape=(len(df_sample_sub), 3))
 for ii, row in df_sample_sub.iterrows():
     year, t1, t2 = get_year_t1_t2(row.id)
     VictoriesTY_diff = victories_this_season(year)['PVictory'][t1] - victories_this_season(year)['PVictory'][t2]
@@ -128,6 +147,7 @@ for ii, row in df_sample_sub.iterrows():
     Seed_t1 = df_seeds[(df_seeds.Season == year) & (df_seeds.Team2 == t1)].SeedT2.values[0]
     seed_diff = Seed_t2 - Seed_t1
     x_test[ii,1] = seed_diff
+    x_test[ii,2] = get_mean_score(t1)-get_mean_score(t2)
     
 # Prédictions
 #preds = clf.predict_proba(x_test)[:,1]

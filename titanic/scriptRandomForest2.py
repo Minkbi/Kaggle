@@ -169,13 +169,13 @@ def clean_titanic(titanic):
     titanic.loc[titanic["Embarked"] != "C", "EmbarkedC"] = 0
     titanic.loc[titanic["Embarked"] == "Q", "EmbarkedQ"] = 1
     titanic.loc[titanic["Embarked"] != "Q", "EmbarkedQ"] = 0
-<<<<<<< HEAD
+
     clean_data = ['TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse','FSingle','FSmall','FBig','Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare',
  'EmbarkedS', 'EmbarkedC', 'EmbarkedQ',
 'TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse',
 'FSingle','FSmall','FBig'
 ,'Mother','Child']
-=======
+
     titanic = deckAdd(titanic)
     clean_data = ['Cabin_0','Cabin_A','Cabin_B','Cabin_C','Cabin_D','Cabin_E','Cabin_F','Cabin_G','Pclass','Age', 'Sex', 'SibSp', 'Parch', 'Fare', 'EmbarkedS', 'EmbarkedC', 'EmbarkedQ','TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse','FSingle','FSmall','FBig']
 #    ['Cabin_0','Cabin_A','Cabin_B','Cabin_C','Cabin_D','Cabin_E','Cabin_F','Cabin_G',
@@ -184,12 +184,9 @@ def clean_titanic(titanic):
 #'TitleMlle','TitleMme','TitleMr','TitleRare','TitleElse',
 #'FSingle','FSmall','FBig'
 #,'Mother','Child']
->>>>>>> 864adca3e8949492893169e3112d34bf25d3e1ae
     return titanic[clean_data]
 
 
-
-<<<<<<< HEAD
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -315,5 +312,3 @@ submission.to_csv('titanicForest.csv', index=False)
 ##        "Survived": predLog
 ##    })
 ##submission.to_csv('titanicLog.csv', index=False)
-=======
->>>>>>> 864adca3e8949492893169e3112d34bf25d3e1ae
