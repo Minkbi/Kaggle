@@ -104,7 +104,7 @@ x_train, y_train = shuffle(x_train, y_train)
 #params = {'C': np.logspace(start=-5, stop=3, num=9)}
 #clf = GridSearchCV(logreg, params, scoring='neg_log_loss', refit=True)
 #clf.fit(x_train, y_train)
-
+#
 #X = np.arange(-1, 1).reshape(-1, 1)
 #preds = clf.predict_proba(X)[:,:]
 
