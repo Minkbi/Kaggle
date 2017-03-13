@@ -25,24 +25,13 @@ def seed_to_int(seed):
     return s_int
 
 df_seeds['n_seed'] = df_seeds.Seed.apply(seed_to_int)
-r = df_seeds['Seed']
-for i in range(len(r)):
-    r0 = str(r[i])[0]
-    if (r0 == 'W'):
-        r[i]=0
-    elif (r0 == 'X'):
-        r[i]=1
-    elif (r0 == 'Y'):
-        r[i]=2
-    else :
-        r[i]=3
-#df_seeds.drop(labels=['Seed'], inplace=True, axis=1) # This is the string label
+df_seeds.drop(labels=['Seed'], inplace=True, axis=1) # This is the string label
 
 
         
 # on fusionne dans le même Dataframe
-df_winseeds = df_seeds.rename(columns={'Team':'Wteam', 'n_seed':'win_seed', 'Seed':'win_region'})
-df_lossseeds = df_seeds.rename(columns={'Team':'Lteam', 'n_seed':'loss_seed','Seed':'loss_region'})
+df_winseeds = df_seeds.rename(columns={'Team':'Wteam', 'n_seed':'win_seed', 'Seed':'win_seed'})
+df_lossseeds = df_seeds.rename(columns={'Team':'Lteam', 'n_seed':'loss_seed','Seed':'loss_seed'})
 df_dummy = pd.merge(left=df_tour, right=df_winseeds, how='left', on=['Season', 'Wteam'])
 df_concat = pd.merge(left=df_dummy, right=df_lossseeds, on=['Season', 'Lteam'])
 df_concat['seed_diff'] = df_concat.win_seed - df_concat.loss_seed

@@ -9,18 +9,16 @@ import numpy as np
 import pandas as pd
 import copy
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.utils import shuffle
 from sklearn.model_selection import GridSearchCV
 
 results = pd.read_csv("RegularSeasonCompactResults.csv")
+resultsTourney = pd.read_csv("TourneyCompactResults.csv")
 
-def delete(year,res):
-    for i in range (year,2017):
-        res = res[res.Season != i]
-        
 
 results.drop(labels=['Daynum','Wloc','Lscore','Wscore','Numot'], inplace=True, axis=1)
+resultsTourney.drop(labels=['Daynum','Wloc','Lscore','Wscore','Numot'], inplace=True, axis=1)
 
 #==============================================================================
 # Traitement du poucentage de victoires cette saison sur le nombre de match joués
@@ -30,10 +28,10 @@ def victories_this_season(year):
     res = copy.copy(results)
     #if year > 1985:
     res = res[res.Season == year]
-    nbWin = res.groupby(['Wteam'],as_index=True).count()
+    nbWin = res.groupby(['Wteam'],as_index=False).count()
     nbWin = nbWin.rename(columns={'Lteam':'NbVictories'})
     nbWin = nbWin.drop('Season',axis=1)
-    nbLosses = res.groupby(['Lteam'],as_index=True).count()
+    nbLosses = res.groupby(['Lteam'],as_index=False).count()
     nbLosses = nbLosses.rename(columns={'Wteam':'NbLosses'})
     nbLosses = nbLosses.drop('Season',axis=1)
     victories = pd.concat([nbWin,nbLosses],axis=1)
@@ -46,14 +44,15 @@ def victories_this_season(year):
     
 victories = victories_this_season(1985)
 victories['Season']=1985
-trainFeature = copy.copy(results)
-#trainFeature = trainFeature[trainFeature.Season != 1985]
-for i in range(1986,2017):
+#trainFeature = copy.copy(results)
+trainFeature = copy.copy(resultsTourney)
+for i in range(1985,2017):
     tmp = victories_this_season(i)
     tmp['Season']=i
     victories = tmp.append(victories)
-victories['Wteam'] = victories.index.values
-trainFeature = pd.merge(trainFeature,victories, on=['Season','Wteam'])
+    
+victories = victories.drop('Lteam',axis=1)
+trainFeature = pd.merge(trainFeature, victories, on=['Season','Wteam'])
 trainFeature = trainFeature.rename(columns={'PVictory':'T1VictoriesTY'})
 victories = victories.rename(columns={'Wteam':'Lteam'})
 trainFeature = pd.merge(trainFeature,victories, on=['Season','Lteam'])
@@ -94,18 +93,22 @@ trainFeature = trainFeature.drop('SeedT1',axis=1)
 # Traitement de la moyenne de différence de points marqué entre les 2 équipes
 #============================================================================== 
 
+res = pd.read_csv("RegularSeasonCompactResults.csv")
+
 def get_mean_score(i):
-    
-    res = pd.read_csv("RegularSeasonCompactResults.csv")
-    df_Win = res[(res.Wteam == 1412)]  
-    diffWin=df_Win.Wscore-df_Win.Lscore
-    
-    df_Lose = res[(res.Lteam == 1412)]
+    df_Win = res[(res.Wteam == i)]  
+    diffWin=df_Win.Wscore-df_Win.Lscore    
+    df_Lose = res[(res.Lteam == i)]
     diffLose=df_Lose.Lscore-df_Lose.Wscore
-    
     diff=pd.concat([diffWin,diffLose])
     return diff.mean()
 
+df_mean=pd.DataFrame()
+df_mean['Mean']=trainFeature['Seed_diff']
+for ii,rows in train.iterrows():
+    rows=get_mean_score(rows.Team1)-get_mean_score(rows.Team2)
+    
+df_mean['Mean'] = (df_mean['Mean'] - df_mean['Mean'].mean())/(df_mean['Mean'].max()-df_mean['Mean'].min())
 
 
 #==============================================================================
@@ -113,11 +116,14 @@ def get_mean_score(i):
 #==============================================================================
 
 x_train = pd.DataFrame()
-x_train['VictoriesTY_diff'] = trainFeature.VictoriesTY_diff.values
-x_train['Seed_diff'] = trainFeature.Seed_diff.values
+#x_train['Mean_diffScore']=df_mean
+
+x_train['VictoriesTY_diff'] = trainFeature['VictoriesTY_diff']
+x_train['Seed_diff'] = trainFeature['Seed_diff']
+#x_train['Mean Score'] = trainFeature['Mean_Score']
 y_train = trainFeature['T1Victory']
 x_train, y_train = shuffle(x_train, y_train)
-
+trainFeature.to_csv('trainFeature.csv', index=False)
 # Logistic regression
 #logreg = LogisticRegression()
 #params = {'C': np.logspace(start=-5, stop=3, num=9)}
@@ -125,7 +131,7 @@ x_train, y_train = shuffle(x_train, y_train)
 #clf.fit(x_train, y_train)
 
 #X = np.arange(-1, 1).reshape(-1, 1)
-#preds = clf.predict_proba(X)[:,1]
+#preds = clf.predict_proba(X)[:,:]
 
 #On récupère les dataTest
 df_sample_sub = pd.read_csv('sample_submission.csv')
@@ -138,22 +144,47 @@ def get_year_t1_t2(id):
 #Testest = victory_last_season(2016)['PVictory'][1103]
 
 #A DECOMMENTER
-x_test = np.zeros(shape=(len(df_sample_sub), 3))
+x_test = np.zeros(shape=(len(df_sample_sub), 2))
+#x_test = np.zeros(shape=(len(df_sample_sub), 1))
 for ii, row in df_sample_sub.iterrows():
     year, t1, t2 = get_year_t1_t2(row.id)
-    VictoriesTY_diff = victories_this_season(year)['PVictory'][t1] - victories_this_season(year)['PVictory'][t2]
-    x_test[ii, 0] = VictoriesTY_diff
+    VictoriesTY_t1 = victories[(victories.Lteam == t1) & (victories.Season == year)].PVictory.values[0]
+    if np.isnan(VictoriesTY_t1):
+        VictoriesTY_t1 = victories[(victories.Lteam == t1) & (victories.Season == year-1)].PVictory.values[0]
+    VictoriesTY_t2 = victories[(victories.Lteam == t2) & (victories.Season == year)].PVictory.values[0]
+    if np.isnan(VictoriesTY_t2):
+        VictoriesTY_t2 = victories[(victories.Lteam == t2) & (victories.Season == year-1)].PVictory.values[0]
+    victories_diff = VictoriesTY_t2 - VictoriesTY_t1
+    x_test[ii, 0] = victories_diff
     Seed_t2 = df_seeds[(df_seeds.Season == year) & (df_seeds.Team2 == t2)].SeedT2.values[0]
     Seed_t1 = df_seeds[(df_seeds.Season == year) & (df_seeds.Team2 == t1)].SeedT2.values[0]
     seed_diff = Seed_t2 - Seed_t1
     x_test[ii,1] = seed_diff
-    x_test[ii,2] = get_mean_score(t1)-get_mean_score(t2)
-    
+#    x_test[ii,2] = get_mean_score(t1)-get_mean_score(t2)
+    #x_test[ii,0] = seed_diff
+
+
+# A CHANGER ABSOLUMENT !!!
+x_train = x_train.fillna(0.5)
+params = {'C': np.logspace(start=-5, stop=3, num=9)}
+model = LogisticRegressionCV()
+model = model.fit(x_train,y_train)
+#print(model.score(x_train,y_train))
+predicted = model.predict_proba(x_test)
+clipped_preds = np.clip(predicted, 0.05, 0.95)
+df_sample_sub.pred = 1-clipped_preds
+df_sample_sub.to_csv('testAlice.csv', index=False)
+
+x_norm_train=copy.copy(x_train)
+x_norm_train['Seed_diff'] = (x_norm_train['Seed_diff'] - x_norm_train['Seed_diff'].mean())/(x_norm_train['Seed_diff'].max()-x_norm_train['Seed_diff'].min())
+
+
+
 # Prédictions
-#preds = clf.predict_proba(x_test)[:,1]
+#preds = clf.predict_proba(x_test)[:,:]
 #clipped_preds = np.clip(preds, 0.05, 0.95)
 #df_sample_sub.pred = clipped_preds
-#df_sample_sub.to_csv('subtest1.csv', index=False)
+#df_sample_sub.to_csv('subtest2.csv', index=False)
 
 
 #for i in range (len(regularCompactResults)) :
