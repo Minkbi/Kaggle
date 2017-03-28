@@ -8,9 +8,11 @@ Created on Tue Mar  7 14:44:01 2017
 import math
 import numpy as np
 import pandas as pd
+import os
 from sklearn.metrics import log_loss
-from sklearn.preprocessing import StandardScaler
-
+from scipy.misc import imread
+from sklearn.metrics import accuracy_score
+import tensorflow as tf
 
 
 def Aggregate(teamcompactresults1,
@@ -277,7 +279,6 @@ def Aggregate(teamcompactresults1,
 
 
 def GrabData():
-    folder = '../input/'
     tourneyresults = pd.read_csv('TourneyCompactResults.csv')
     tourneyseeds = pd.read_csv('TourneySeeds.csv')
     regularseasoncompactresults = \
@@ -412,7 +413,6 @@ def GrabData():
     return train, test
 
 
-
 if __name__ == "__main__":
     train, test = GrabData()
     trainlabels = train.result.values
@@ -422,19 +422,58 @@ if __name__ == "__main__":
     print(test.columns)
     test.drop(['Id', 'Pred'], inplace=True, axis=1)
     test.fillna(-1, inplace=True)
+
+
+### set all variables
+# number of neurons in each layer
+input_num_units = 29
+hidden_num_units = 500
+output_num_units = 1
+
+# define placeholders
+x = tf.placeholder(tf.float32, [None, input_num_units])
+y = tf.placeholder(tf.float32, [None, output_num_units])
+
+# set remaining variables
+epochs = 5
+batch_size = 128
+learning_rate = 0.01
+
+### define weights and biases of the neural network (refer this article if you don't understand the terminologies)
+
+weights = {
+    'hidden': tf.Variable(tf.random_normal([input_num_units, hidden_num_units])),
+    'output': tf.Variable(tf.random_normal([hidden_num_units, output_num_units]))
+}
+biases = {
+    'hidden': tf.Variable(tf.random_normal([hidden_num_units])),
+    'output': tf.Variable(tf.random_normal([output_num_units]))
+}
+hidden_layer = tf.add(tf.matmul(x, weights['hidden']), biases['hidden'])
+hidden_layer = tf.nn.relu(hidden_layer)
+output_layer = tf.matmul(hidden_layer, weights['output']) + biases['output']
+#cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(output_layer, y))
+#optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+init = tf.initialize_all_variables()
+with tf.Session() as sess:
+    # create initialized variables
+    sess.run(init)    
+    # find predictions on val set
+    pred_temp = tf.equal(tf.argmax(output_layer, 1), tf.argmax(y, 1))
+    accuracy = tf.reduce_mean(tf.cast(pred_temp, "float"))
+#    print( "Validation Accuracy:", accuracy.eval({x: val_x.reshape(-1, input_num_units), y: dense_to_one_hot(val_y)}))
     
-    
-    
-    ss = StandardScaler()
-    train[train.columns] = np.round(ss.fit_transform(train), 6)
-    predictions = GPIndividual1(train)
-    predictions.fillna(1, inplace=True)
-    print(log_loss(trainlabels, np.clip(predictions.values, .01, .99)))
-    test[test.columns] = np.round(ss.transform(test), 6)
-    predictions = GPIndividual1(test)
-    predictions.fillna(1, inplace=True)
+    predict = tf.argmax(output_layer, 1)
+    pred = predict.eval({x: test})
+#
+#
+#    print(log_loss(trainlabels, np.clip(predictions.values, .01, .99)))
+#    test[test.columns] = np.round(ss.transform(test), 6)
+#    predictions = GPIndividual1(test)
+#    predictions.fillna(1, inplace=True)
     submission = pd.DataFrame({'Id': testids,
-                               'Pred': np.clip(predictions.values, .4, .55)})
+                               'Pred': np.clip(pred, 0, .55)})
     submission.to_csv('subtest3.csv', index=False)
     
     print('Finished')

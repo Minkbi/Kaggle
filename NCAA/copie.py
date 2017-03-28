@@ -354,7 +354,7 @@ def GrabData():
     tourneyseeds = pd.read_csv('TourneySeeds.csv')
     regularseasoncompactresults = \
         pd.read_csv('RegularSeasonCompactResults.csv')
-    sample = pd.read_csv('SampleSubmission2.csv')
+    sample = pd.read_csv('sample_submission.csv')
     results = pd.DataFrame()
     results['year'] = tourneyresults.Season
     results['team1'] = np.minimum(tourneyresults.Wteam, tourneyresults.Lteam)
@@ -430,9 +430,9 @@ def GrabData():
                       merged_results,
                       regularseasoncompactresults)
 
-    sample['year'] = sample.Id.apply(lambda x: str(x)[:4]).astype(int)
-    sample['team1'] = sample.Id.apply(lambda x: str(x)[5:9]).astype(int)
-    sample['team2'] = sample.Id.apply(lambda x: str(x)[10:14]).astype(int)
+    sample['year'] = sample.id.apply(lambda x: str(x)[:4]).astype(int)
+    sample['team1'] = sample.id.apply(lambda x: str(x)[5:9]).astype(int)
+    sample['team2'] = sample.id.apply(lambda x: str(x)[10:14]).astype(int)
 
     merged_results = pd.merge(how='left',
                               left=sample,
@@ -491,7 +491,7 @@ if __name__ == "__main__":
     train.fillna(-1, inplace=True)
     testids = test.id.values
     print(test.columns)
-    test.drop(['Id', 'Pred'], inplace=True, axis=1)
+    test.drop(['id', 'pred'], inplace=True, axis=1)
     test.fillna(-1, inplace=True)
     ss = StandardScaler()
     train[train.columns] = np.round(ss.fit_transform(train), 6)
@@ -501,8 +501,8 @@ if __name__ == "__main__":
     test[test.columns] = np.round(ss.transform(test), 6)
     predictions = GPIndividual1(test)
     predictions.fillna(1, inplace=True)
-    submission = pd.DataFrame({'Id': testids,
-                               'Pred': np.clip(predictions.values, .1, .9)})
+    submission = pd.DataFrame({'id': testids,
+                               'pred': np.clip(predictions.values, .1, .9)})
     submission.to_csv('sub2.csv', index=False)
     
     print('Finished')
