@@ -10,8 +10,18 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import log_loss
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
 
+sample = pd.read_csv('sample_submission.csv')
 
+def get_year_t1_t2(id):
+    """Return a tuple with ints `year`, `team1` and `team2`."""
+    return (int(x) for x in id.split('_'))
+
+def getPred(df_test,sample):    
+    
+    return pred
 
 def Aggregate(teamcompactresults1,
               teamcompactresults2,
@@ -282,7 +292,7 @@ def GrabData():
     tourneyseeds = pd.read_csv('TourneySeeds.csv')
     regularseasoncompactresults = \
         pd.read_csv('RegularSeasonCompactResults.csv')
-    sample = pd.read_csv('SampleSubmission.csv')
+    
     results = pd.DataFrame()
     results['year'] = tourneyresults.Season
     results['team1'] = np.minimum(tourneyresults.Wteam, tourneyresults.Lteam)
@@ -404,34 +414,46 @@ def GrabData():
     teamcompactresults1 = merged_results[['year', 'team1']].copy()
     teamcompactresults2 = merged_results[['year', 'team2']].copy()
 
-    test = Aggregate(teamcompactresults1,
+    test1 = Aggregate(teamcompactresults1,
                      teamcompactresults2,
                      merged_results,
                      regularseasoncompactresults)
+    
+#    test = getPred(test1,sample)
 
-    return train, test
+    return train, test1
+
+
 
 
 
 if __name__ == "__main__":
-    train, test = GrabData()
-    trainlabels = train.result.values
-    train.drop('result', inplace=True, axis=1)
-    train.fillna(-1, inplace=True)
-    testids = test.Id.values
-    print(test.columns)
-    test.drop(['Id', 'Pred'], inplace=True, axis=1)
-    test.fillna(-1, inplace=True)
-    ss = StandardScaler()
-    train[train.columns] = np.round(ss.fit_transform(train), 6)
-    predictions = GPIndividual1(train)
-    predictions.fillna(1, inplace=True)
-    print(log_loss(trainlabels, np.clip(predictions.values, .01, .99)))
-    test[test.columns] = np.round(ss.transform(test), 6)
-    predictions = GPIndividual1(test)
-    predictions.fillna(1, inplace=True)
-    submission = pd.DataFrame({'Id': testids,
-                               'Pred': np.clip(predictions.values, .4, .55)})
-    submission.to_csv('sub2.csv', index=False)
     
-    print('Finished')
+    X_train, X_test = GrabData()
+    y_train=X_train['result']
+    X_train.drop(['result'],inplace=True, axis=1)
+
+    trainlabels = y_train.values
+    X_train.fillna(-1, inplace=True)
+    
+    testids = X_test.id.values
+    X_test.drop(['id','pred'], inplace=True, axis=1)
+    X_test.fillna(-1, inplace=True)
+    ss = StandardScaler()
+    X_train[train.columns] = np.round(ss.fit_transform(X_train), 6)
+    X_test[test.columns] = np.round(ss.fit_transform(X_test), 6)
+    
+    logreg = LogisticRegression()
+    params = {'C': np.logspace(start=-5, stop=3, num=9)}
+    clf = GridSearchCV(logreg, params, scoring='neg_log_loss', refit=True)
+    logreg.fit(X_train, y_train)
+    
+    preds = logreg.predict_proba(X_test)
+    clipped_preds = np.clip(preds, 0.1, 0.9)
+    
+   
+    submission = pd.DataFrame({'id': testids,
+                               'pred': clipped_preds[:,1]})
+    submission.to_csv('sub2.csv', index=False)
+##    
+##    print('Finished')
